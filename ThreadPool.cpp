@@ -26,17 +26,25 @@ void ThreadPool::start()
     {
         m_threads.push_back(new std::thread(std::bind(&ThreadPool::thread_loop, this)));
     }
-
 }
 
 void ThreadPool::stop()
 {
     std::cout << "thread_pool stop. " << std::endl;
+
+
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_is_running = false;
         m_cond.notify_all();//通知所有挂起线程
     }
+    //下面的实现和上面一样的。使用unique_lock更方便，但不要忽略花括号
+    /* 
+    m_mutex.lock();
+    m_is_running = false;
+    m_cond.notify_all();//通知所有挂起线程
+    m_mutex.unlock();
+    */
 
     for (threads_t::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
     {
@@ -52,8 +60,9 @@ void ThreadPool::thread_loop()
     std::cout << "thread " << gettid() << " start" << std::endl;
     while (m_is_running)
     {
+        //尝试去取一个任务来完成
         task_t task = take();
-        if (task)
+        if (task)   
         {
             task();
         }
@@ -77,7 +86,6 @@ ThreadPool::task_t ThreadPool::take()
         m_cond.wait(lock);
     }
     task_t task;
-    auto size = m_tasks.size();
     if (!m_tasks.empty() && m_is_running)
     {
         task = m_tasks.front();
