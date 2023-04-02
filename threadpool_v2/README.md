@@ -69,7 +69,7 @@ double bind_func(){
 			(*task_ptr)();
 		};
 		add_task(task_func);
-		/*返回future对象，这个对象中保存这函数计算结果
+		/*返回future对象，这个对象中保存这函数计算结果*/
 		return task_ptr->get_future();
 	}
 ```
